@@ -41,12 +41,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.usersRouter = void 0;
 var express_1 = require("express");
-var router = (0, express_1.Router)();
-exports.usersRouter = router;
 var bcrypt_1 = __importDefault(require("bcrypt"));
 var user_1 = __importDefault(require("../models/user"));
 var authToken_1 = __importDefault(require("../utilities/authToken"));
 var auth_1 = __importDefault(require("../middleware/auth"));
+var router = (0, express_1.Router)();
+exports.usersRouter = router;
 router.post("/signUp", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var exist, _a, username, password, email, salt, hashedPassword, user, newUser, token, err_1;
     return __generator(this, function (_b) {

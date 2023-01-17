@@ -1,12 +1,13 @@
 import express from "express";
-const app = express();
-const PORT = 8080;
 import { usersRouter } from "./routes/users";
 import { productsRouter } from "./routes/products";
 import sequelize from "./config/db";
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 dotenv.config();
+
+const app = express();
+const PORT = 8080;
 
 (async () => {
     try {

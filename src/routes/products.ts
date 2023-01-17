@@ -1,9 +1,9 @@
 import { Response, Request, Router } from "express";
-const router = Router();
 import auth from "../middleware/auth";
 import Product from "../models/product";
 import upload from "../utilities/image";
 import * as fs from "fs";
+const router = Router();
 
 //Get all products for chosen user
 router.get(

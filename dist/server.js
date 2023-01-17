@@ -40,14 +40,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
-var app = (0, express_1.default)();
-var PORT = 8080;
 var users_1 = require("./routes/users");
 var products_1 = require("./routes/products");
 var db_1 = __importDefault(require("./config/db"));
 var promise_1 = __importDefault(require("mysql2/promise"));
 var dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
+var app = (0, express_1.default)();
+var PORT = 8080;
 (function () { return __awaiter(void 0, void 0, void 0, function () {
     var connection, err_1;
     return __generator(this, function (_a) {

@@ -64,12 +64,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.productsRouter = void 0;
 var express_1 = require("express");
-var router = (0, express_1.Router)();
-exports.productsRouter = router;
 var auth_1 = __importDefault(require("../middleware/auth"));
 var product_1 = __importDefault(require("../models/product"));
 var image_1 = __importDefault(require("../utilities/image"));
 var fs = __importStar(require("fs"));
+var router = (0, express_1.Router)();
+exports.productsRouter = router;
 //Get all products for chosen user
 router.get("/getAllProd", auth_1.default, function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var products, err_1;
@@ -139,7 +139,7 @@ router.post("/addProd", auth_1.default, image_1.default.single("img"), function 
                 product = _b.sent();
                 return [3 /*break*/, 4];
             case 2:
-                imgPath = req.file.path.toString();
+                imgPath = req.file.path;
                 return [4 /*yield*/, product_1.default.create({
                         title: title,
                         price: Number(price),

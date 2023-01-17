@@ -1,9 +1,9 @@
 import { Response, Request, Router } from "express";
-const router = Router();
 import bcrypt from "bcrypt";
 import User from "../models/user";
 import generateAuthToken from "../utilities/authToken";
 import auth from "../middleware/auth";
+const router = Router();
 
 router.post(
     "/signUp",

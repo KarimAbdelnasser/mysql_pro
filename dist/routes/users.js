@@ -42,18 +42,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.usersRouter = void 0;
 var express_1 = require("express");
 var bcrypt_1 = __importDefault(require("bcrypt"));
-var user_1 = __importDefault(require("../models/user"));
+var user_1 = require("../models/user");
 var authToken_1 = __importDefault(require("../utilities/authToken"));
 var auth_1 = __importDefault(require("../middleware/auth"));
 var router = (0, express_1.Router)();
 exports.usersRouter = router;
+//Sign Up
 router.post("/signUp", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var exist, _a, username, password, email, salt, hashedPassword, user, newUser, token, err_1;
+    var error, exist, _a, username, password, email, salt, hashedPassword, user, newUser, token, err_1;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
                 _b.trys.push([0, 6, , 7]);
-                return [4 /*yield*/, user_1.default.findOne({
+                error = user_1.schema.validate(req.body).error;
+                if (error) {
+                    return [2 /*return*/, res.status(400).send(error.details[0].message)];
+                }
+                return [4 /*yield*/, user_1.User.findOne({
                         where: { username: req.body.username },
                     })];
             case 1:
@@ -67,7 +72,7 @@ router.post("/signUp", function (req, res) { return __awaiter(void 0, void 0, vo
                 return [4 /*yield*/, bcrypt_1.default.hash(password, salt)];
             case 3:
                 hashedPassword = _b.sent();
-                return [4 /*yield*/, user_1.default.create({
+                return [4 /*yield*/, user_1.User.create({
                         username: username,
                         password: hashedPassword,
                         email: email,
@@ -88,13 +93,14 @@ router.post("/signUp", function (req, res) { return __awaiter(void 0, void 0, vo
         }
     });
 }); });
+//Log In
 router.get("/logIn", auth_1.default, function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var exist, err_2;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 2, , 3]);
-                return [4 /*yield*/, user_1.default.findOne({
+                return [4 /*yield*/, user_1.User.findOne({
                         where: { username: req.user.username, id: req.user._id },
                     })];
             case 1:

@@ -1,27 +1,34 @@
 import { Response, Request, Router } from "express";
 import bcrypt from "bcrypt";
-import User from "../models/user";
+import { User, schema } from "../models/user";
 import generateAuthToken from "../utilities/authToken";
 import auth from "../middleware/auth";
 const router = Router();
 
+//Sign Up
 router.post(
     "/signUp",
     async (req: Request, res: Response): Promise<void | Response> => {
         try {
+            const { error } = schema.validate(req.body);
+            if (error) {
+                return res.status(400).send(error.details[0].message);
+            }
             const exist = await User.findOne({
                 where: { username: req.body.username },
             });
             if (exist) return res.status(400).send("User already registered.");
-            let { username, password, email } = req.body;
+
+            const { username, password, email } = req.body;
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            let user = await User.create({
+
+            const user = await User.create({
                 username: username,
                 password: hashedPassword,
                 email: email,
             });
-            let newUser = await user.get({ plain: true });
+            const newUser = await user.get({ plain: true });
             const token = generateAuthToken(newUser.id, username);
             res.status(201).send(`Created new user & token= ${token}`);
         } catch (err) {
@@ -30,6 +37,7 @@ router.post(
     }
 );
 
+//Log In
 router.get(
     "/logIn",
     auth,

@@ -1,6 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db";
-import User from "./user";
+import { User } from "./user";
+import Joi from "joi";
+
 const Product = sequelize.define(
     "Product",
     {
@@ -25,10 +27,18 @@ const Product = sequelize.define(
     },
     { tableName: "products", timestamps: true }
 );
+
 Product.belongsTo(User, {
     foreignKey: "user_id",
     targetKey: "id",
     as: "author",
     onDelete: "CASCADE",
 });
-export default Product;
+
+const schema = Joi.object({
+    title: Joi.string().min(5).max(200).required(),
+    price: Joi.number().required(),
+    image: Joi.string().min(10),
+});
+
+export { Product, schema };

@@ -65,7 +65,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.productsRouter = void 0;
 var express_1 = require("express");
 var auth_1 = __importDefault(require("../middleware/auth"));
-var product_1 = __importDefault(require("../models/product"));
+var product_1 = require("../models/product");
 var image_1 = __importDefault(require("../utilities/image"));
 var fs = __importStar(require("fs"));
 var router = (0, express_1.Router)();
@@ -77,18 +77,16 @@ router.get("/getAllProd", auth_1.default, function (req, res) { return __awaiter
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 2, , 3]);
-                return [4 /*yield*/, product_1.default.findAll({
+                return [4 /*yield*/, product_1.Product.findAll({
                         where: { user_id: req.user._id },
+                        attributes: ["title", "price", "image", "createdAt"],
                     })];
             case 1:
                 products = _a.sent();
                 if (products.length === 0) {
                     return [2 /*return*/, res.status(404).send("You have no products yet!")];
                 }
-                else {
-                    res.status(200).send(products);
-                }
-                return [3 /*break*/, 3];
+                return [2 /*return*/, res.status(200).send(products)];
             case 2:
                 err_1 = _a.sent();
                 console.log("An error!", err_1);
@@ -104,11 +102,20 @@ router.get("/getProd/:id", auth_1.default, function (req, res) { return __awaite
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 2, , 3]);
-                return [4 /*yield*/, product_1.default.findOne({
-                        where: { id: req.user._id },
+                return [4 /*yield*/, product_1.Product.findOne({
+                        where: {
+                            user_id: req.user._id,
+                            id: req.params.id,
+                        },
+                        attributes: ["title", "price", "image", "createdAt"],
                     })];
             case 1:
                 product = _a.sent();
+                if (!product) {
+                    return [2 /*return*/, res
+                            .status(404)
+                            .send("No product has found with this given ID!")];
+                }
                 res.status(200).send(product);
                 return [3 /*break*/, 3];
             case 2:
@@ -122,112 +129,103 @@ router.get("/getProd/:id", auth_1.default, function (req, res) { return __awaite
 }); });
 //Add a new product
 router.post("/addProd", auth_1.default, image_1.default.single("img"), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var userId, _a, title, price, product, imgPath, product, err_3;
+    var userId, _a, title, price, error, records, imgPath, err_3;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
-                _b.trys.push([0, 5, , 6]);
+                _b.trys.push([0, 2, , 3]);
                 userId = req.user._id;
                 _a = req.body, title = _a.title, price = _a.price;
-                if (!!req.file) return [3 /*break*/, 2];
-                return [4 /*yield*/, product_1.default.create({
-                        title: title,
-                        price: price,
-                        user_id: userId,
-                    })];
+                error = product_1.schema.validate(req.body).error;
+                if (error) {
+                    return [2 /*return*/, res.status(400).send(error.details[0].message)];
+                }
+                records = {
+                    title: title,
+                    price: price,
+                    user_id: userId,
+                };
+                if (req.file) {
+                    imgPath = req.file.path;
+                    records.image = imgPath;
+                }
+                return [4 /*yield*/, product_1.Product.create(records)];
             case 1:
-                product = _b.sent();
-                return [3 /*break*/, 4];
+                _b.sent();
+                res.status(201).send("Created a new product successfully!");
+                return [3 /*break*/, 3];
             case 2:
-                imgPath = req.file.path;
-                return [4 /*yield*/, product_1.default.create({
-                        title: title,
-                        price: Number(price),
-                        user_id: userId,
-                        image: imgPath,
-                    })];
-            case 3:
-                product = _b.sent();
-                _b.label = 4;
-            case 4:
-                res.status(201).send("Created new product successfully!");
-                return [3 /*break*/, 6];
-            case 5:
                 err_3 = _b.sent();
                 console.log(err_3);
-                return [3 /*break*/, 6];
-            case 6: return [2 /*return*/];
+                return [3 /*break*/, 3];
+            case 3: return [2 /*return*/];
         }
     });
 }); });
 //Remove a product
 router.post("/removeProd/:id", auth_1.default, function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var userId, productId, auth;
+    var userId, productId, product;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 userId = req.user._id;
                 productId = Number(req.params.id);
-                return [4 /*yield*/, product_1.default.findOne({ where: { id: productId } })];
+                return [4 /*yield*/, product_1.Product.findOne({ where: { id: productId } })];
             case 1:
-                auth = _a.sent();
-                if (!auth) {
+                product = _a.sent();
+                if (!product) {
                     return [2 /*return*/, res
                             .status(400)
                             .send("There is no product with the given product id")];
                 }
-                else if (auth.dataValues.user_id !== userId) {
+                if (product.dataValues.user_id !== userId) {
                     return [2 /*return*/, res.status(401).send("Not Authorized!")];
                 }
-                return [4 /*yield*/, product_1.default.destroy({ where: { id: productId } })];
+                return [4 /*yield*/, product_1.Product.destroy({ where: { id: productId } })];
             case 2:
                 _a.sent();
-                return [4 /*yield*/, fs.unlink(auth.dataValues.image, function (err) {
+                return [4 /*yield*/, fs.unlink(product.dataValues.image, function (err) {
                         if (err) {
                             console.log(err);
                         }
                         else {
-                            console.log("".concat(auth.dataValues.image, " was deleted."));
+                            console.log("".concat(product.dataValues.image, " was deleted."));
                         }
                     })];
             case 3:
                 _a.sent();
-                res.send("Product with id ".concat(productId, " has been Deleted successfully!"));
+                res.status(201).send("Product with id ".concat(productId, " has been deleted successfully!"));
                 return [2 /*return*/];
         }
     });
 }); });
 //Update a product
 router.put("/editProd/:id", auth_1.default, image_1.default.single("img"), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var productId, newImg, newPrice, userId, auth_2, product, updates, editedProd, err_4;
+    var productId, newImg, newPrice, userId, product, updates, err_4;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 8, , 9]);
+                _a.trys.push([0, 7, , 8]);
                 productId = Number(req.params.id);
                 newImg = req.file;
                 newPrice = Number(req.body.price);
                 userId = req.user._id;
-                return [4 /*yield*/, product_1.default.findOne({ where: { id: productId } })];
+                return [4 /*yield*/, product_1.Product.findOne({ where: { id: productId } })];
             case 1:
-                auth_2 = _a.sent();
-                if (!!auth_2) return [3 /*break*/, 2];
+                product = _a.sent();
+                if (!!product) return [3 /*break*/, 2];
                 return [2 /*return*/, res
                         .status(400)
-                        .send("There is no product with the given product id")];
+                        .send("There is no product with the given product ID!")];
             case 2:
-                if (!(auth_2.dataValues.user_id !== userId)) return [3 /*break*/, 3];
+                if (!(product.dataValues.user_id !== userId)) return [3 /*break*/, 3];
                 return [2 /*return*/, res.status(401).send("Not Authorized!")];
             case 3:
                 if (!(!newImg && !newPrice)) return [3 /*break*/, 4];
                 return [2 /*return*/, res
                         .status(400)
                         .send("Invalid data to update a product!")];
-            case 4: return [4 /*yield*/, product_1.default.findOne({
-                    where: { id: productId },
-                })];
-            case 5:
-                product = _a.sent();
+            case 4:
                 if ((newImg === null || newImg === void 0 ? void 0 : newImg.path) === (product === null || product === void 0 ? void 0 : product.dataValues.image) &&
                     newPrice === (product === null || product === void 0 ? void 0 : product.dataValues.price)) {
                     return [2 /*return*/, res
@@ -241,20 +239,20 @@ router.put("/editProd/:id", auth_1.default, image_1.default.single("img"), funct
                 if (newPrice && newPrice !== (product === null || product === void 0 ? void 0 : product.dataValues.price)) {
                     updates.price = newPrice;
                 }
-                return [4 /*yield*/, product_1.default.update(updates, {
+                return [4 /*yield*/, product_1.Product.update(updates, {
                         where: { id: productId },
                     })];
-            case 6:
-                editedProd = _a.sent();
+            case 5:
+                _a.sent();
                 return [2 /*return*/, res
                         .status(201)
-                        .send("This product has been updated successfully!")];
-            case 7: return [3 /*break*/, 9];
-            case 8:
+                        .send("The product has been updated successfully!")];
+            case 6: return [3 /*break*/, 8];
+            case 7:
                 err_4 = _a.sent();
                 console.log(err_4);
-                return [3 /*break*/, 9];
-            case 9: return [2 /*return*/];
+                return [3 /*break*/, 8];
+            case 8: return [2 /*return*/];
         }
     });
 }); });

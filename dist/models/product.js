@@ -37,7 +37,7 @@ Product.belongsTo(user_1.User, {
 });
 var schema = joi_1.default.object({
     title: joi_1.default.string().min(5).max(200).required(),
-    price: joi_1.default.number().required(),
+    price: joi_1.default.number().min(1).required(),
     image: joi_1.default.string().min(10),
 });
 exports.schema = schema;

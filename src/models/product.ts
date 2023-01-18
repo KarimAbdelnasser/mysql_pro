@@ -37,7 +37,7 @@ Product.belongsTo(User, {
 
 const schema = Joi.object({
     title: Joi.string().min(5).max(200).required(),
-    price: Joi.number().required(),
+    price: Joi.number().min(1).required(),
     image: Joi.string().min(10),
 });
 

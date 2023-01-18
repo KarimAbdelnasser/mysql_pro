@@ -3,6 +3,7 @@ import auth from "../middleware/auth";
 import { Product, schema } from "../models/product";
 import upload from "../utilities/image";
 import * as fs from "fs";
+import { User } from "../models/user";
 const router = Router();
 
 //Get all products for chosen user
@@ -14,6 +15,10 @@ router.get(
         res: Response
     ): Promise<void | Response> => {
         try {
+            const user = await User.findOne({ where: { id: req.user._id } });
+            if (!user) {
+                return res.status(404).send("You haven't registered yet!");
+            }
             const products = await Product.findAll({
                 where: { user_id: req.user._id },
                 attributes: ["title", "price", "image", "createdAt"],
@@ -37,6 +42,10 @@ router.get(
         res: Response
     ): Promise<void | Response> => {
         try {
+            const user = await User.findOne({ where: { id: req.user._id } });
+            if (!user) {
+                return res.status(404).send("You haven't registered yet!");
+            }
             const product = await Product.findOne({
                 where: {
                     user_id: req.user._id,
@@ -67,6 +76,10 @@ router.post(
         res: Response
     ): Promise<void | Response> => {
         try {
+            const user = await User.findOne({ where: { id: req.user._id } });
+            if (!user) {
+                return res.status(404).send("You haven't registered yet!");
+            }
             const userId: number = req.user._id;
             const { title, price } = req.body;
             const { error } = schema.validate(req.body);
@@ -98,28 +111,36 @@ router.post(
         req: Request & { user?: any },
         res: Response
     ): Promise<void | Response> => {
-        const userId = req.user._id;
-        const productId: number = Number(req.params.id);
-        const product = await Product.findOne({ where: { id: productId } });
-        if (!product) {
-            return res
-                .status(400)
-                .send(`There is no product with the given product id`);
-        }
-        if (product.dataValues.user_id !== userId) {
-            return res.status(401).send("Not Authorized!");
-        }
-        await Product.destroy({ where: { id: productId } });
-        await fs.unlink(product.dataValues.image, (err) => {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log(`${product.dataValues.image} was deleted.`);
+        try {
+            const user = await User.findOne({ where: { id: req.user._id } });
+            if (!user) {
+                return res.status(404).send("You haven't registered yet!");
             }
-        });
-        res.status(201).send(
-            `Product with id ${productId} has been deleted successfully!`
-        );
+            const userId = req.user._id;
+            const productId: number = Number(req.params.id);
+            const product = await Product.findOne({ where: { id: productId } });
+            if (!product) {
+                return res
+                    .status(400)
+                    .send(`There is no product with the given product id`);
+            }
+            if (product.dataValues.user_id !== userId) {
+                return res.status(401).send("Not Authorized!");
+            }
+            await Product.destroy({ where: { id: productId } });
+            await fs.unlink(product.dataValues.image, (err) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(`${product.dataValues.image} was deleted.`);
+                }
+            });
+            res.status(201).send(
+                `Product with id ${productId} has been deleted successfully!`
+            );
+        } catch (err) {
+            console.log(err);
+        }
     }
 );
 
@@ -137,6 +158,10 @@ router.put(
             const newImg = req.file;
             const newPrice: number = Number(req.body.price);
             const userId = req.user._id;
+            const user = await User.findOne({ where: { id: req.user._id } });
+            if (!user) {
+                return res.status(404).send("You haven't registered yet!");
+            }
             const product = await Product.findOne({ where: { id: productId } });
             if (!product) {
                 return res
